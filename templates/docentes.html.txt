@@ -1,0 +1,21 @@
+<h2>Docentes cargados</h2>
+
+<table border="1">
+
+<tr>
+<th>Nombre</th>
+<th>Apellido</th>
+<th>Mail</th>
+<th>Materia</th>
+</tr>
+
+{% for d in datos %}
+<tr>
+<td>{{d[1]}}</td>
+<td>{{d[2]}}</td>
+<td>{{d[3]}}</td>
+<td>{{d[4]}}</td>
+</tr>
+{% endfor %}
+
+</table>

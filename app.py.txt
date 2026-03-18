@@ -1,0 +1,97 @@
+from flask import Flask, render_template, request, redirect
+import sqlite3
+import fitz
+import pandas as pd
+import os
+
+app = Flask(__name__)
+
+def db():
+    return sqlite3.connect("database.db")
+
+def crear():
+    con = db()
+    con.execute("""
+    create table if not exists docentes(
+        id integer primary key autoincrement,
+        nombre text,
+        apellido text,
+        mail text,
+        materia text
+    )
+    """)
+    con.commit()
+
+crear()
+
+@app.route("/")
+def panel():
+    con = db()
+    total = con.execute("select count(*) from docentes").fetchone()[0]
+    return render_template("panel.html", total=total)
+
+@app.route("/subir")
+def subir():
+    return render_template("subir.html")
+
+@app.route("/procesar", methods=["POST"])
+def procesar():
+    materia = request.form["materia"]
+    pdf = request.files["pdf"]
+
+    archivo = fitz.open(stream=pdf.read(), filetype="pdf")
+
+    tablas = []
+
+    for pagina in archivo:
+        t = pagina.find_tables()
+        for tabla in t.tables:
+            df = pd.DataFrame(tabla.extract())
+            df.columns = df.iloc[0]
+            df = df[1:]
+            tablas.append(df)
+
+    final = pd.concat(tablas)
+
+    datos = []
+
+    for i,row in final.iterrows():
+        datos.append({
+            "nombre": str(row[0]),
+            "apellido": str(row[1]),
+            "mail": str(row[2]),
+            "materia": materia
+        })
+
+    return render_template("preview.html", datos=datos)
+
+@app.route("/guardar", methods=["POST"])
+def guardar():
+    con = db()
+
+    for k in request.form:
+        if "nombre_" in k:
+            i = k.split("_")[1]
+
+            nombre = request.form[f"nombre_{i}"]
+            apellido = request.form[f"apellido_{i}"]
+            mail = request.form[f"mail_{i}"]
+            materia = request.form[f"materia_{i}"]
+
+            con.execute("""
+            insert into docentes(nombre,apellido,mail,materia)
+            values(?,?,?,?)
+            """,(nombre,apellido,mail,materia))
+
+    con.commit()
+    return redirect("/")
+
+@app.route("/docentes")
+def docentes():
+    con = db()
+    datos = con.execute("select * from docentes").fetchall()
+    return render_template("docentes.html", datos=datos)
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT",10000))
+    app.run(host="0.0.0.0", port=port)

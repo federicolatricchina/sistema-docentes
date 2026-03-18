@@ -1,0 +1,15 @@
+<h2>Vista previa</h2>
+
+<form action="/guardar" method="post">
+
+{% for d in datos %}
+<input name="nombre_{{loop.index}}" value="{{d.nombre}}">
+<input name="apellido_{{loop.index}}" value="{{d.apellido}}">
+<input name="mail_{{loop.index}}" value="{{d.mail}}">
+<input name="materia_{{loop.index}}" value="{{d.materia}}">
+<br>
+{% endfor %}
+
+<button>Guardar</button>
+
+</form>

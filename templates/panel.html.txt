@@ -1,0 +1,9 @@
+<h1>Sistema Docentes</h1>
+
+Total docentes: {{total}}
+
+<br><br>
+
+<a href="/subir">Subir PDF</a>
+<br>
+<a href="/docentes">Ver docentes</a>
